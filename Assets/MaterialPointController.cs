@@ -7,41 +7,88 @@ using System;
 public class MaterialPointController : MonoBehaviour {
 
     // Use this for initialization
-    private List<GameObject> closestObjects;
+	[SerializeField]
+	private GameObject lineRendererPrefab;
 
+    private List<GameObject> closestObjects;
+	private List<Transform[]> lineConnections;
+	private List<LineRenderer> lineRender;
     void Start ()
     {
-        FindClosestEnemy();
+		closestObjects = new List<GameObject> ();
+		closestObjects = FindNeighbors();
+		lineRender = new List<LineRenderer> ();
+		GameObject linesParent = new GameObject ("lines");
+		foreach (var line in lineConnections)
+		{
+			LineRenderer newLine = Instantiate (lineRendererPrefab).GetComponent<LineRenderer>(); 
+			newLine.transform.parent = linesParent.transform;
+		
+
+			lineRender.Add (newLine);
+		}
 
     }
 	
 	// Update is called once per frame
-	void Update () {
-		
+	void Update () 
+	{
+		for (int i = 0; i < lineConnections.Count(); i++) 
+		{
+			lineRender [i].SetPositions (new Vector3[] { lineConnections [i] [0].position, lineConnections [i] [1].position });
+		}
 	}
 
-    public List<GameObject> FindClosestEnemy()
+	public List<GameObject> FindNeighbors()
     {
         GameObject[] materialPoints;
         Dictionary<GameObject, float> pointsDictionary = new Dictionary<GameObject, float>();
-        closestObjects = new List<GameObject>();
-        materialPoints = GameObject.FindGameObjectsWithTag("MaterialPoint");
-        GameObject closest = null;
-        float distance = Mathf.Infinity;
-        Vector3 position = transform.position;
+      
+		materialPoints = GameObject.FindGameObjectsWithTag ("MaterialPoint");
         foreach (GameObject materialPoint in materialPoints)
         {
-            Vector3 diff = materialPoint.transform.position - position;
-            float curDistance = diff.sqrMagnitude;
+			Vector3 diff = materialPoint.transform.position - this.transform.position;
+            float curDistance = diff.sqrMagnitude; //hmm
             pointsDictionary.Add(materialPoint, curDistance);
         }
 
-        var xxx = pointsDictionary.OrderBy(x => x.Value);
-        var ptt = xxx.Skip(Math.Max(0, xxx.Count() - 4));
-        foreach (var item in ptt)
-        {
-            Debug.Log(item.ToString());
-        }
-        return closestObjects;
+		var orderedPoints = pointsDictionary.OrderByDescending (x => x.Value).ToDictionary (x => x.Key);
+		orderedPoints.Remove(orderedPoints.Keys.Last());
+		var closestPoints = orderedPoints.Skip (Math.Max (0, orderedPoints.Count () - 4));
+	
+
+		List<Vector3> connections = new List<Vector3>();
+		lineConnections = new List<Transform[]> ();
+
+		foreach (var item in closestPoints) 
+		{
+			
+			//if(item.Key.GetComponent<MaterialPointController>().closestObjects.Contains(this.gameObject))
+			{
+				connections.Add (item.Key.transform.position);
+				lineConnections.Add (new Transform[] { this.transform, item.Key.transform });
+
+			//item.Key.GetComponent<LineRenderer> ().SetPositions();
+			}
+		}
+
+	
+
+
+		if(this.name == "Mat_Point:0")
+		{
+			foreach (var item in closestPoints)
+        	{
+				
+				//if (item.Key.GetComponent<) {
+					
+				//}
+				Debug.Log("node" + this.name + " " + item.Key.name + " " + item.Value.ToString());
+				item.Key.gameObject.GetComponent<MeshRenderer> ().material.color = Color.red;
+        	}
+		}
+
+		closestObjects = closestPoints.Select ((x) => x.Key).ToList();	
+		return closestObjects;
     }
 }
