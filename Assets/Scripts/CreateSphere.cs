@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class CreateSphere : MonoBehaviour {
 
@@ -9,25 +11,34 @@ public class CreateSphere : MonoBehaviour {
     [SerializeField]
     private GameObject materialPoint;
     [SerializeField]
-    private float radius;
-	void Start ()
+    private int radius;
+    private List<GameObject> materialPoints;
+    void Start()
     {
+        materialPoints = new List<GameObject>();
+
+
         //var sphericalPoints = SphericalPointsDistribution.GetCartesianCoordinates(radius, 10);
-        var sphericalPoints = SphericalPointsDistribution.FibonacciSphere(199, 6);
-        GameObject Ball = new GameObject("Ball");
-		int id = 0;
-		foreach (var point in sphericalPoints)
+        var sphericalPoints = SphericalPointsDistribution.FibonacciSphere(199, radius);
+        GameObject materialPointSphere = new GameObject("Sphere");
+        int id = 0;
+        foreach (var point in sphericalPoints)
         {
             GameObject newMaterialPoint = (GameObject)Instantiate(materialPoint, point, Quaternion.identity);
-            newMaterialPoint.transform.parent = Ball.transform;
-			newMaterialPoint.name = String.Format("Mat_Point:{0}", id++);
+            newMaterialPoint.transform.parent = materialPointSphere.transform;
+            newMaterialPoint.name = String.Format("Mat_Point:{0}", id++);
+            materialPoints.Add(newMaterialPoint);
         }
-	}
-	
-	// Update is called once per frame
-	void Update ()
+       
+    }
+
+    // Update is called once per frame
+    void Update ()
     {
-		
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            SceneManager.LoadScene(0);
+        }
 	}
 
 	
